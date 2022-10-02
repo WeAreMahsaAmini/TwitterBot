@@ -4,7 +4,7 @@ import {
   NODE_ENV,
   ORIGIN,
   PORT,
-  REDIS_URL,
+  REDISCLOUD_URL,
   SECRET_KEY,
 } from '@config'
 import errorMiddleware from '@middlewares/error.middleware'
@@ -59,7 +59,7 @@ class App {
   }
 
   private initializeRedis() {
-    this.redisClient = new Redis(REDIS_URL)
+    this.redisClient = new Redis(REDISCLOUD_URL)
   }
 
   private initializeMiddlewares() {
