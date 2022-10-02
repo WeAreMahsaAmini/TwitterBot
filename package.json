@@ -1,0 +1,6 @@
+{
+    "name": "we-are-mahsa-amini",
+    "workspaces": [
+      "server"
+    ]
+}
