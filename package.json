@@ -1,6 +1,9 @@
 {
     "name": "we-are-mahsa-amini",
     "workspaces": [
-      "server"
-    ]
+        "server"
+    ],
+    "scripts": {
+        "build": "npm run build --workspaces"
+    }
 }
