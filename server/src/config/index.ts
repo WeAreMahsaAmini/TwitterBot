@@ -12,4 +12,5 @@ export const {
   ORIGIN,
   TWITTER_CLIENT_ID,
   TWITTER_CLIENT_SECRET,
+  REDIS_URL,
 } = process.env

@@ -1,6 +1,6 @@
 import { twitterOauth } from '@/middlewares/twitter-oauth.middelware'
 import { Request, Response } from 'express'
-import { Controller, Get, Post, Req, Res, UseBefore } from 'routing-controllers'
+import { Controller, Get, Req, Res, UseBefore } from 'routing-controllers'
 import { request } from 'undici'
 
 @Controller('/oauth')
@@ -10,7 +10,7 @@ export class OAuthController {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async giveAccess() {}
 
-  @Post('/callback')
+  @Get('/callback')
   async callback(@Req() req: Request, @Res() res: Response) {
     const tokenSet = req.session.tokenSet
     console.log('received tokens %j', req.session.tokenSet)
