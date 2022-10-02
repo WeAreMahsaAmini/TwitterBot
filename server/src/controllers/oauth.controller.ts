@@ -7,11 +7,7 @@ import { request } from 'undici'
 @UseBefore(twitterOauth)
 export class OAuthController {
   @Get()
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async giveAccess() {}
-
-  @Get('/callback')
-  async callback(@Req() req: Request, @Res() res: Response) {
+  async giveAccess(@Req() req: Request, @Res() res: Response) {
     const tokenSet = req.session.tokenSet
     console.log('received tokens %j', req.session.tokenSet)
 
@@ -27,4 +23,8 @@ export class OAuthController {
     const username = (await body.json()).data.username
     res.send(`Hello ${username}!`)
   }
+
+  @Get('/callback')
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async callback() {}
 }
