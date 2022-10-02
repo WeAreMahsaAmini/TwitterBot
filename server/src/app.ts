@@ -76,6 +76,9 @@ class App {
         secret: SECRET_KEY,
         resave: false,
         saveUninitialized: true,
+        cookie: {
+          maxAge: 5 * 60 * 1000,
+        },
       }),
     )
   }
