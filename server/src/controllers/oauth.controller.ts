@@ -11,9 +11,7 @@ export class OAuthController {
     if (!tokenSet) {
       return `Get access from Twitter failed.`
     }
-
-    const { access_token, refresh_token } = tokenSet
-    return `Access Token: ${access_token}\nRefresh Token: ${refresh_token}`
+    return tokenSet
   }
 
   @Get('/callback')
