@@ -1,6 +1,5 @@
 import { twitterOauth } from '@/middlewares/twitter-oauth.middelware'
-import { RequestWithUser } from '@interfaces/auth.interface'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import { Controller, Get, Post, Req, Res, UseBefore } from 'routing-controllers'
 import { request } from 'undici'
 
@@ -12,7 +11,7 @@ export class OAuthController {
   async giveAccess() {}
 
   @Post('/callback')
-  async callback(@Req() req: RequestWithUser, @Res() res: Response) {
+  async callback(@Req() req: Request, @Res() res: Response) {
     const tokenSet = req.session.tokenSet
     console.log('received tokens %j', req.session.tokenSet)
     const { body } = await request('https://api.twitter.com/2/users/me', {
