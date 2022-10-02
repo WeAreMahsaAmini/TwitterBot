@@ -4,32 +4,32 @@
         {
             "type": "node-terminal",
             "request": "launch",
-            "name": "Dev typescript-express-starter",
-            "command": "npm run dev"
+            "name": "Dev Server",
+            "command": "npm run dev --workspace=server"
         },
         {
             "type": "node-terminal",
             "request": "launch",
-            "name": "Start typescript-express-starter",
-            "command": "npm run start"
+            "name": "Start Server",
+            "command": "npm run start --workspace=server"
         },
         {
             "type": "node-terminal",
             "request": "launch",
-            "name": "Test typescript-express-starter",
-            "command": "npm run test"
+            "name": "Test Server",
+            "command": "npm run test --workspace=server"
         },
         {
             "type": "node-terminal",
             "request": "launch",
-            "name": "Lint typescript-express-starter",
-            "command": "npm run lint"
+            "name": "Lint Server",
+            "command": "npm run lint --workspace=server"
         },
         {
             "type": "node-terminal",
             "request": "launch",
-            "name": "Lint:Fix typescript-express-starter",
-            "command": "npm run lint:fix"
+            "name": "Lint:Fix Server",
+            "command": "npm run lint:fix --workspace=server"
         }
     ]
 }
