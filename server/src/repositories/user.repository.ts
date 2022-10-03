@@ -3,10 +3,13 @@ import { PrismaClient } from '@prisma/client'
 
 const client = new PrismaClient()
 
-export const createUser = async (user: User): Promise<User> => {
+type UserWithoutId = Omit<User, 'id'>
+type PartialUser = Partial<UserWithoutId>
+
+export const createUser = async (user: UserWithoutId): Promise<User> => {
   return await client.user.create({ data: user })
 }
 
-export const updateUser = async (id: string, data: Partial<User>): Promise<User> => {
+export const updateUser = async (id: string, data: PartialUser): Promise<User> => {
   return await client.user.update({ where: { id }, data })
 }

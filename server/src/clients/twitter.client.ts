@@ -11,9 +11,15 @@ export class TwitterCLient {
 
   getAuthUser = async (access_token?: string): Promise<TwitterUser> => {
     const client = access_token ? new Client(access_token) : this.client
-    const user = await client.users.findMyUser({
+    const { data: user } = await client.users.findMyUser({
       'user.fields': ['id', 'username', 'name', 'protected', 'verified'],
     })
-    return user.data as TwitterUser
+    return {
+      twitterId: user.id,
+      name: user.name,
+      username: user.username,
+      protected: !!user.protected,
+      verified: !!user.verified,
+    }
   }
 }

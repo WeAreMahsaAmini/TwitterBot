@@ -11,7 +11,9 @@ datasource db {
 }
 
 model User {
-  id    String  @id @map("_id") @db.ObjectId
+  id    String  @id @default(auto()) @map("_id") @db.ObjectId
+  
+  twitterId String @unique
   username String  @unique
   name  String
   protected Boolean
