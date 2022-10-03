@@ -1,12 +1,14 @@
-import { UserDto } from '@/dtos/users.dto'
+import { TwitterCLient } from '@/clients/twitter.client'
 import { twitterOauth } from '@/middlewares/twitter-oauth.middelware'
+import { createUser } from '@/repositories/user.repository'
 import { Request } from 'express'
 import { Controller, Get, Req, UseBefore } from 'routing-controllers'
-import { request } from 'undici'
 
 @Controller('/oauth')
 @UseBefore(twitterOauth)
 export class OAuthController {
+  twitterClient = new TwitterCLient()
+
   @Get()
   async giveAccess(@Req() req: Request) {
     const tokenSet = req.session.tokenSet
@@ -14,12 +16,12 @@ export class OAuthController {
       return `Get access from Twitter failed.`
     }
 
-    const { body } = await request('https://api.twitter.com/2/users/me', {
-      headers: {
-        Authorization: `Bearer ${tokenSet?.access_token}`,
-      },
+    const twitterUser = await this.twitterClient.getAuthUser(tokenSet.access_token)
+    const user = await createUser({
+      ...twitterUser,
+      accessToken: tokenSet.access_token,
+      refreshToken: tokenSet.refresh_token,
     })
-    const user: UserDto = await body.json()
     return { user, tokenSet }
   }
 
