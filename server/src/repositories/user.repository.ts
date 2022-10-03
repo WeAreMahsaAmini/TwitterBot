@@ -1,5 +1,4 @@
-import { User } from '@/interfaces/users.interface'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 
 const client = new PrismaClient()
 
