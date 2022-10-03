@@ -30,5 +30,4 @@ model ForLibertyAccount {
   language String @unique
 
   lastTweetId String?
-  lastTweetAt DateTime?
 }
