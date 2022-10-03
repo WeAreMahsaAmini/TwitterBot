@@ -13,7 +13,10 @@ datasource db {
 model User {
   id    String  @id @map("_id") @db.ObjectId
   username String  @unique
-  name  String?
+  name  String
+  protected Boolean
+  verified Boolean
+
   accessToken String
   refreshToken String
 }
