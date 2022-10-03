@@ -13,4 +13,5 @@ export const {
   TWITTER_CLIENT_ID,
   TWITTER_CLIENT_SECRET,
   REDISCLOUD_URL,
+  TWITTER_BEARER_TOKEN,
 } = process.env
