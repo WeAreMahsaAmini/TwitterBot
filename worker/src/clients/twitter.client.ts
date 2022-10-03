@@ -39,18 +39,25 @@ export class TwitterCLient {
     startTime?: Date
     endTime?: Date
     take?: number
-    next_token?: string
+    nextToken?: string
   }): Promise<SearchTweetResponse> => {
     try {
-      const { query, sinceTweetId, startTime, endTime, take, next_token } = options
+      const { query, sinceTweetId, startTime, endTime, take, nextToken } = options
       const result = await this.bearerClient.v2.search(query, {
-        'tweet.fields': ['id', 'text', 'lang', 'author_id', 'created_at'],
+        'tweet.fields': [
+          'id',
+          'text',
+          'lang',
+          'author_id',
+          'created_at',
+          'public_metrics',
+        ],
         since_id: sinceTweetId ? sinceTweetId : undefined,
         sort_order: 'recency',
         start_time: startTime?.toISOString(),
         end_time: endTime?.toISOString(),
         max_results: take,
-        next_token,
+        next_token: nextToken,
       })
       return {
         tweets: result.tweets.map(tweet => ({
@@ -59,6 +66,16 @@ export class TwitterCLient {
           lang: tweet.lang,
           authorId: tweet.author_id,
           createdAt: new Date(tweet.created_at),
+          public_metrics: {
+            retweetCount: tweet.public_metrics.retweet_count,
+            replyCount: tweet.public_metrics.reply_count,
+            likeCount: tweet.public_metrics.like_count,
+            quoteCount: tweet.public_metrics.quote_count,
+          },
+          popularity:
+            5 * (tweet.public_metrics.retweet_count + tweet.public_metrics.quote_count) +
+            2 * tweet.public_metrics.reply_count +
+            tweet.public_metrics.like_count,
         })),
         resultCount: result.meta.result_count,
         nextToken: result.meta.next_token,
@@ -68,12 +85,15 @@ export class TwitterCLient {
     }
   }
 
-  getAllTweets = async (options: {
+  getTopTweets = async (options: {
     query: string
+    take: number
+    startsWith?: string
     startTime?: Date
     endTime?: Date
     sinceTweetId?: string
   }): Promise<Tweet[]> => {
+    const { take, startsWith } = options
     process.stdout.write('Fetching tweets: ')
     let result = await this.searchTweets({ ...options, take: 100 })
     let tweets = result.tweets
@@ -83,13 +103,23 @@ export class TwitterCLient {
       result = await this.searchTweets({
         ...options,
         take: 100,
-        next_token: result.nextToken,
+        nextToken: result.nextToken,
       })
       tweets = [...tweets, ...result.tweets]
       counter += 1
     }
-    process.stdout.write(' Done')
+    process.stdout.write(' Done\n')
+
     return tweets
+      .filter(t => {
+        if (startsWith) {
+          return t.text.startsWith(startsWith)
+        }
+        return true
+      })
+      .sort((a, b) => b.popularity - a.popularity)
+      .slice(0, take)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
   }
 
   retweet = async (tweetId: string): Promise<void> => {

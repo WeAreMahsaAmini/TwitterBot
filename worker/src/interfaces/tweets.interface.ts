@@ -4,6 +4,13 @@ export interface Tweet {
   lang: string
   authorId: string
   createdAt: Date
+  public_metrics: {
+    retweetCount: number
+    replyCount: number
+    likeCount: number
+    quoteCount: number
+  }
+  popularity: number
 }
 
 export interface SearchTweetResponse {

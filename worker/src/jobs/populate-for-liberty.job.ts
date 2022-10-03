@@ -7,7 +7,7 @@ import { fetchUser, updateUser } from '@repositories/user.repository'
 import { CronJob } from 'cron'
 
 export const populateForLiberty = new CronJob(
-  '0 * * * *',
+  '*/15 * * * *',
   async () => {
     console.log('Populating For Liberty ...')
 
@@ -16,18 +16,17 @@ export const populateForLiberty = new CronJob(
     const forLibertyUser = await fetchUser(forLibertyAccount.userId)
 
     const twitterClient = new TwitterCLient(forLibertyUser)
-    const tweets = await twitterClient.getAllTweets({
+    const tweets = await twitterClient.getTopTweets({
       query: 'برای (#مهساـامینی OR #MahsaAmini OR #اعتصاباتـسراسری) -is:retweet lang:fa',
+      take: 50,
+      startsWith: 'برای',
       sinceTweetId: forLibertyAccount.lastTweetId,
     })
 
     const { accessToken, refreshToken } = await twitterClient.refreshToken()
     await updateUser(forLibertyUser.id, { accessToken, refreshToken })
 
-    const persianTweets = tweets
-      .filter(tweet => tweet.text.startsWith('برای'))
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-    for (const tweet of persianTweets) {
+    for (const tweet of tweets) {
       twitterClient.retweet(tweet.id)
       await updateForLibertyAccount(forLibertyAccount.id, { lastTweetId: tweet.id })
     }
