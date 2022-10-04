@@ -29,5 +29,5 @@ model ForLibertyAccount {
   userId String @unique
   language String @unique
 
-  lastTweetId String?
+  resetRules Boolean @default(false)
 }

@@ -1,12 +1,11 @@
-import {
-  TWITTER_BEARER_TOKEN,
-  TWITTER_CLIENT_ID,
-  TWITTER_CLIENT_SECRET,
-  TWITTER_SEARCH_CYCLE_LIMIT,
-} from '@config'
-import { SearchTweetResponse, Tweet } from '@interfaces/tweets.interface'
+import { TWITTER_BEARER_TOKEN, TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET } from '@config'
+import { Tweet } from '@interfaces/tweets.interface'
 import { User } from '@prisma/client'
-import { TwitterApi } from 'twitter-api-v2'
+import {
+  ETwitterStreamEvent,
+  StreamingV2UpdateRulesAddResult,
+  TwitterApi,
+} from 'twitter-api-v2'
 
 export class TwitterCLient {
   private user: User
@@ -24,6 +23,15 @@ export class TwitterCLient {
     this.userClient = new TwitterApi(this.user.accessToken)
   }
 
+  validateToken = async () => {
+    try {
+      await this.userClient.v2.me()
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
   refreshToken = async (): Promise<{ accessToken: string; refreshToken: string }> => {
     const response = await this.client.refreshOAuth2Token(this.user.refreshToken)
     this.userClient = new TwitterApi(response.accessToken)
@@ -33,34 +41,28 @@ export class TwitterCLient {
     }
   }
 
-  searchTweets = async (options: {
-    query: string
-    sinceTweetId?: string
-    startTime?: Date
-    endTime?: Date
-    take?: number
-    nextToken?: string
-  }): Promise<SearchTweetResponse> => {
-    try {
-      const { query, sinceTweetId, startTime, endTime, take, nextToken } = options
-      const result = await this.bearerClient.v2.search(query, {
-        'tweet.fields': [
-          'id',
-          'text',
-          'lang',
-          'author_id',
-          'created_at',
-          'public_metrics',
-        ],
-        since_id: sinceTweetId ? sinceTweetId : undefined,
-        sort_order: 'recency',
-        start_time: startTime?.toISOString(),
-        end_time: endTime?.toISOString(),
-        max_results: take,
-        next_token: nextToken,
-      })
-      return {
-        tweets: result.tweets.map(tweet => ({
+  deleteStreamRules = async (): Promise<void> => {
+    const result = await this.bearerClient.v2.streamRules()
+    const ruleIds = result.data?.map(rule => rule.id)
+    if (ruleIds) {
+      await this.bearerClient.v2.updateStreamRules({ delete: { ids: ruleIds } })
+    }
+  }
+
+  setStreamRules = async (rules: string[]): Promise<StreamingV2UpdateRulesAddResult> => {
+    return await this.bearerClient.v2.updateStreamRules({
+      add: rules.map(rule => ({ value: rule })),
+    })
+  }
+
+  streamTweets = async (handler: (data: Tweet) => Promise<void>): Promise<void> => {
+    const stream = await this.bearerClient.v2.searchStream({
+      'tweet.fields': ['id', 'text', 'lang', 'author_id', 'created_at', 'public_metrics'],
+    })
+    stream.on(ETwitterStreamEvent.Data, async result => {
+      const tweet = result.data
+      try {
+        await handler({
           id: tweet.id,
           text: tweet.text,
           lang: tweet.lang,
@@ -76,53 +78,19 @@ export class TwitterCLient {
             5 * (tweet.public_metrics.retweet_count + tweet.public_metrics.quote_count) +
             2 * tweet.public_metrics.reply_count +
             tweet.public_metrics.like_count,
-        })),
-        resultCount: result.meta.result_count,
-        nextToken: result.meta.next_token,
+        })
+      } catch (e) {
+        console.error(e)
       }
-    } catch (e) {
-      console.error(JSON.stringify(e.errors))
-    }
-  }
-
-  getTopTweets = async (options: {
-    query: string
-    take: number
-    startsWith?: string
-    startTime?: Date
-    endTime?: Date
-    sinceTweetId?: string
-  }): Promise<Tweet[]> => {
-    const { take, startsWith } = options
-    process.stdout.write('Fetching tweets: ')
-    let result = await this.searchTweets({ ...options, take: 100 })
-    let tweets = result.tweets
-    let counter = 1
-    while (result.nextToken && counter < (parseInt(TWITTER_SEARCH_CYCLE_LIMIT) || 10)) {
-      process.stdout.write('#')
-      result = await this.searchTweets({
-        ...options,
-        take: 100,
-        nextToken: result.nextToken,
-      })
-      tweets = [...tweets, ...result.tweets]
-      counter += 1
-    }
-    process.stdout.write(' Done\n')
-
-    return tweets
-      .filter(t => {
-        if (startsWith) {
-          return t.text.startsWith(startsWith)
-        }
-        return true
-      })
-      .sort((a, b) => b.popularity - a.popularity)
-      .slice(0, take)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    })
+    await stream.connect({ autoReconnect: true, autoReconnectRetries: Infinity })
   }
 
   retweet = async (tweetId: string): Promise<void> => {
-    await this.userClient.v2.retweet(this.user.twitterId, tweetId)
+    try {
+      await this.userClient.v2.retweet(this.user.twitterId, tweetId)
+    } catch (e) {
+      console.error(e)
+    }
   }
 }
