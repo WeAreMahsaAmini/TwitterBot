@@ -18,7 +18,7 @@ export const populateForLiberty = async () => {
     await twitterClient.setStreamRules([
       [
         'برای',
-        '(#مهساـامینی OR #MahsaAmini)',
+        '#مهساـامینی',
         '-is:retweet',
         '-is:reply',
         'followers_count:500..100000000',
